@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" type="text/css" href="../static/style.css">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;1,100;1,300&display=swap" rel="stylesheet">
+    </head>
+<body>
+    <p class="header"> 
+        BMI CALCULATOR
+    </p>
+    <form action="/" method="POST" class = "container">
+        Weight(kg)
+        <input type="text" name="weight" class="weight"> <br>
+        Height(cm)
+        <input type="text" name="height" class = "height"> <br>
+
+        <button type="submit" value="submit" class = "submit"> Calculate </button>
+
+
+    </form>
+    {%if bmi%}
+    <P class="intro">Your body mass index is {{bmi}}</P>
+    {%endif%}
+</body>
+</html>

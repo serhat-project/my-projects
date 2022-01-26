@@ -1,0 +1,71 @@
+html, body{
+    max-width:500px;
+    margin:2rem auto;
+    padding:2rem; 
+    background-color: #000000;
+    background-image: linear-gradient(315deg, #000000 0%, #414141 74%);
+    background-repeat: no-repeat;
+    font-family: 'Roboto', sans-serif;
+}
+
+.container{
+    color:aliceblue;
+}
+
+.header{
+    margin-left: 100px;
+    color: white;
+    font-family: cursive;
+    font-size:30px;
+    font-weight:600;
+}
+
+.weight{
+    background: transparent;
+    border-bottom: 2px solid white;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    color:white;
+    font-family: 'Roboto', sans-serif;
+    margin-top: 20px;
+    margin-left: 30px;
+    font-size: 20px;
+    padding: 7px;
+    width: 300px;
+}
+.height{
+    background: transparent;
+    border-bottom: 2px solid white;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    color:white;
+    font-family: 'Roboto', sans-serif;
+    margin-top: 20px;
+    margin-left: 30px;
+    font-size: 20px;
+    padding: 7px;
+    width: 300px;
+}
+
+.submit{
+    background: black;
+    color:blanchedalmond;
+    border-radius: 20px 0 20px 0;
+    font-size: 20px;
+    padding: 10px;
+    margin-top: 50px;
+    margin-left: 300px;
+    transition: .3s ease-in;
+}
+
+.intro{
+    font-size: 20px;
+    font-weight: bold;
+    color:yellow;   
+}
