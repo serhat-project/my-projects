@@ -8,7 +8,7 @@ app=Flask(__name__)
 
 def calculate():
     bmi=''
-    if request.method== "POST" and "weight" in request.form and "height" in request.form:
+    if request.method== "POST":
         Weight = float(request.form.get("weight"))
         Height = float(request.form.get("height"))
         bmi=round(Weight/((Height/100)**2), 2)

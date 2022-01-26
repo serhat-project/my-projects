@@ -14,7 +14,7 @@ html, body{
 
 .header{
     margin-left: 100px;
-    color: white;
+    color: rgb(230, 36, 36);
     font-family: cursive;
     font-size:30px;
     font-weight:600;
@@ -62,6 +62,11 @@ html, body{
     margin-top: 50px;
     margin-left: 300px;
     transition: .3s ease-in;
+}
+
+.dev{
+    font-size: small;
+    color: crimson;
 }
 
 .intro{
