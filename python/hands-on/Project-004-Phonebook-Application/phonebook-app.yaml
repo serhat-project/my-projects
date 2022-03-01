@@ -61,12 +61,12 @@ Resources:
                 pip3 install flask_mysql
                 echo "${MyDBURI}" > /home/ec2-user/dbserver.endpoint
                 cd /home/ec2-user
-                wget 
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/phonebook-app.py
                 mkdir templates
                 cd templates
-                wget 
-                wget 
-                wget
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/index.html
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/delete.html
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/add-update.html
                 cd ..
                 python3 /home/ec2-user/phonebook-app.py
                 
