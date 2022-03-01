@@ -1,162 +1,170 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
-  CloudFormation Template for Phonebook Application. 
-
+  CloudFormation Template for Phonebook Application. This template creates Application Load Balancer 
+  with Auto Scaling Group of Amazon Linux 2 EC2 Instances which host Python Flask Web Application.
+  
 Parameters:
-  myVPC:
-    Description: Select your VPC
+  MyVPC:
+    Description: VPC ID of your existing account
     Type: AWS::EC2::VPC::Id
-  myKP:
-    Description: Select your Key
+  KeyName:
+    Description: Please write the key name of your account
     Type: AWS::EC2::KeyPair::KeyName
+ 
+  Subnets:
+    Description: Select at least 2 subnets
+    Type: List<AWS::EC2::Subnet::Id>
 
-Resources:
-  MySecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+Mappings:
+  RegionImageMap:
+    us-east-1:
+      AMI: ami-0dc2d3e4c0f9ebd18
+    us-east-2:
+      AMI: ami-0233c2d874b811deb
+    us-west-1:
+      AMI: ami-0ed05376b59b90e46
+    us-west-2:
+      AMI: ami-0dc8f589abe99f538
+    eu-west-1:
+      AMI: ami-058b1b7fe545997ae    
+Resources: 
+  WebServerASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      GroupDescription: Enable HTTP for Flask Web Server and Ssh for entering to EC2
-      SecurityGroupIngress:
-         - IpProtocol: tcp
-           FromPort: 22
-           ToPort: 22
-           CidrIp: 0.0.0.0/0
-         - IpProtocol: tcp
-           FromPort: 80
-           ToPort: 80
-           SourceSecurityGroupId: !GetAtt ALBSecurityGroup.GroupId
-      VpcId: !Ref myVPC
-
-  ALBSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+      AvailabilityZones:
+        !GetAZs "" 
+      DesiredCapacity: 2
+      HealthCheckGracePeriod: 90
+      HealthCheckType: ELB
+      LaunchTemplate:
+        LaunchTemplateId: !Ref MyLT
+        Version: !GetAtt MyLT.LatestVersionNumber
+      MaxSize: 3 # Required
+      MinSize: 1 # Required
+      TargetGroupARNs:
+        - !Ref MyServerTG
+  
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      GroupDescription: Enable HTTP for Application Load Balancer
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-
-  WebServerLT:
-    Type: AWS::EC2::LaunchTemplate
+      DefaultActions: # Required
+        - TargetGroupArn: !Ref MyServerTG
+          Type: forward
+      LoadBalancerArn: !Ref MyALB # Required
+      Port: 80
+      Protocol: HTTP
+  
+  MyALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      LaunchTemplateData: 
-        ImageId: ami-0947d2ba12ee1ff75
-        InstanceType: t2.micro
-        KeyName: !Ref myKP
-        SecurityGroupIds: 
-          - !GetAtt MySecurityGroup.GroupId
-        TagSpecifications: 
-          - ResourceType: instance
-            Tags:
-              - Key: Name
-                Value: !Sub Web Server of ${AWS::StackName} Stack
-        UserData:
-          Fn::Base64:
-            !Sub 
-              - |
-                #! /bin/bash
-                yum update -y
-                yum install python3 -y
-                pip3 install flask
-                pip3 install flask_mysql
-                echo "${MyDBURI}" > /home/ec2-user/dbserver.endpoint
-                cd /home/ec2-user
-                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/phonebook-app.py
-                mkdir templates
-                cd templates
-                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/index.html
-                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/delete.html
-                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/add-update.html
-                cd ..
-                python3 /home/ec2-user/phonebook-app.py
-                
-              - MyDBURI: !GetAtt MyDatabaseServer.Endpoint.Address
-
-  MyTG:
-    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+        - !GetAtt MyALBSecGroup.GroupId
+      Subnets: !Ref Subnets
+      Type: application
+  
+  MyServerTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Port: 80
       Protocol: HTTP
       TargetType: instance
       UnhealthyThresholdCount: 3
       HealthyThresholdCount: 2
-      VpcId: !GetAtt MySecurityGroup.VpcId
-    
-  MyALB:
-    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
-    Properties:
-      IpAddressType: ipv4
-      Scheme: internet-facing
-      SecurityGroups:
-        - !GetAtt ALBSecurityGroup.GroupId
-      Subnets:
-        - subnet-0cda6a2d
-        - subnet-25deb22b
-        - subnet-7dfe074c
-        - subnet-8f2461c2
-        - subnet-9971dbff
-        - subnet-fd0bbca2
-      Type: application
-
-  ALBListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions: # Required
-        - Type: forward
-          TargetGroupArn: !Ref MyTG
-      LoadBalancerArn: !Ref MyALB # Required
-      Port: 80
-      Protocol: HTTP
+      VpcId: !Ref MyVPC
   
-  WebServerASG:
-    Type: "AWS::AutoScaling::AutoScalingGroup"
-    Properties:
-      AvailabilityZones:
-        !GetAZs ""
-      DesiredCapacity: 2
-      HealthCheckGracePeriod: 300
-      HealthCheckType: ELB
-      LaunchTemplate:
-        LaunchTemplateId: !Ref WebServerLT
-        Version: !GetAtt WebServerLT.LatestVersionNumber
-      MaxSize: 3 #required
-      MinSize: 1 #required
-      TargetGroupARNs:
-        - !Ref MyTG
-
-  MyDBSecurityGroup:
-    Type: AWS::RDS::DBSecurityGroup
-    Properties:
-      GroupDescription: Front-end access
-      DBSecurityGroupIngress:
-        - CIDRIP: 0.0.0.0/0
-        - EC2SecurityGroupId: !GetAtt MySecurityGroup.GroupId
-
-  MyDatabaseServer:
+  MyRDSDBServer:
     Type: AWS::RDS::DBInstance
-    DeletionPolicy: Delete
     Properties:
       AllocatedStorage: 20
-      AllowMajorVersionUpgrade: false 
+      AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
       BackupRetentionPeriod: 0
-      DBInstanceIdentifier: phonebook-app-db5
-      DBName: phonebook
-      DBSecurityGroups: 
-        - !Ref MyDBSecurityGroup
+      DBInstanceIdentifier: phonebook-app-db3
+      DBName: clarusway_phonebook
+      DBSecurityGroups:
+        - !Ref MyDBServerSecGroup
       Engine: MySQL
-      DBInstanceClass: db.t2.micro #Required
-      EngineVersion: 8.0.25
+      DBInstanceClass: db.t2.micro
+      EngineVersion: 8.0.19
       MasterUsername: admin
       MasterUserPassword: serhat1234
       MultiAZ: false
       Port: 3306
       PubliclyAccessible: true
+  
+  MyDBServerSecGroup:
+    Type: AWS::RDS::DBSecurityGroup
+    Properties:
+      DBSecurityGroupIngress: # Required 
+        - EC2SecurityGroupId: !GetAtt WebServerSecurityGroup.GroupId
+      GroupDescription: My Database Security Group # Required
+  MyLT:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: !FindInMap 
+         - RegionImageMap
+         - !Ref AWS::Region
+         - AMI
+        InstanceType: t2.micro
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !GetAtt WebServerSecurityGroup.GroupId
+        UserData:
+          Fn::Base64: 
+            !Sub 
+              - | 
+                #!/bin/bash
+                yum update -y
+                yum install python3 -y
+                pip3 install flask
+                pip3 install flask_mysql
+                cd /home/ec2-user
+                echo "${MyDBURL}" > /home/ec2-user/dbserver.endpoint
+                chmod 777 dbserver.endpoint
+                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/phonebook-app.py
+                mkdir templates
+                cd templates
+                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/add-update.html
+                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/delete.html
+                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/index.html
+                cd ..  
+                python3 /home/ec2-user/phonebook-app.py
+              - MyDBURL: !GetAtt MyRDSDBServer.Endpoint.Address
 
- 
+
+  MyALBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP for application Balancer # Required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref MyVPC
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP for Flask Web Server and SSH for getting into EC2  # Required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !GetAtt MyALBSecGroup.GroupId
+      VpcId: !Ref MyVPC 
+  
+   
+  
 Outputs:
   WebsiteURL:
-    Value: !Sub 
+    Value: !Sub
       - http://${ALBAddress}
       - ALBAddress: !GetAtt MyALB.DNSName
     Description: Phonebook Application Load Balancer URL
