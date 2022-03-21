@@ -124,12 +124,12 @@ Resources:
                 cd /home/ec2-user
                 echo "${MyDBURL}" > /home/ec2-user/dbserver.endpoint
                 chmod 777 dbserver.endpoint
-                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/phonebook-app.py
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/phonebook-app.py
                 mkdir templates
                 cd templates
-                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/add-update.html
-                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/delete.html
-                wget https://raw.githubusercontent.com/Onuralp-Ozcan/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/index.html
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/index.html
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/delete.html
+                wget https://raw.githubusercontent.com/serhat-project/my-projects/main/python/hands-on/Project-004-Phonebook-Application/templates/add-update.html
                 cd ..  
                 python3 /home/ec2-user/phonebook-app.py
               - MyDBURL: !GetAtt MyRDSDBServer.Endpoint.Address
